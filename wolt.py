@@ -21,9 +21,6 @@ end run
 '''
 
 arglist=sys.argv
-if len(arglist) < 2:
-    print("usage: wolt [-p] restaurant-name [restaurant-name] ...")
-    sys.exit(1)
 
 apobj = apprise.Apprise()
 
@@ -45,7 +42,7 @@ def get_location_from_freetext(freetext):
 
 sys.tracebacklimit = 0
 notifiers = {}
-notifiers = config.get('Push','push.notifiers')
+# notifiers = config.get('Push','push.notifiers')
 
 freetext = config.get('Location','location.freetext')
 if freetext == '':
@@ -63,13 +60,14 @@ else:
 
 def show_toast(rest, title, newstate):
     global rests
-    wsl_notification_path = config.get('General','wsl.notification.path')
+    print(rests)
+    # wsl_notification_path = config.get('General','wsl.notification.path')
     if rests[rest] != newstate:
        rests[rest] = newstate
        if exists("/usr/bin/osascript"):
            notify("Wolt checker", title + " is " + rests[rest])
-       if exists(wsl_notification_path + 'wsl-notify-send.exe'):
-           subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate])
+    #    if exists(wsl_notification_path + 'wsl-notify-send.exe'):
+    #        subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate])
        if push == True:
            send_push(RESTNAME + " is " + newstate)    
 
@@ -126,20 +124,21 @@ def get_english_name(arr,origname):
            return a["value"]
     return origname
 
-arglist.pop(0)
-push=False
-if arglist[0] == '-p':
-    print("PUSH Mode")
-    push=True
-    arglist.pop(0)
+# arglist.pop(0)
+# push=False
+# if arglist[0] == '-p':
+#     print("PUSH Mode")
+#     push=True
+#     arglist.pop(0)
 
-if len(arglist) == 0:
+rests={}
+rests_list = json.loads(config.get('Restaurants','restaurants_list'))
+if len(rests_list) == 0:
     print("No restaurant[s] supplied")
     sys.exit(1)
 
-rests={}
-for rest in arglist:
-    print("Adding resturant "+rest+" for monitoring")
+for rest in enumerate(rests_list):
+    print("Adding restaurant "+rest+" for monitoring")
     rests[rest]="Closed"
 
 print()
@@ -159,7 +158,7 @@ while(True):
             show_toast(rest, RESTNAME, 'Open')
         else:
             show_toast(rest, RESTNAME, 'Closed')
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='')
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, "")
             if RESTOPENHOURS == False:
                 print("(Outside of open hours)")
             elif RESTONLINE == False:
